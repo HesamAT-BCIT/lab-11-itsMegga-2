@@ -15,12 +15,19 @@ from utils.validation import normalize_profile_data, require_json_content_type, 
 
 from . import api_bp
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 @api_bp.get("/profile")
 @require_jwt
 def api_get_profile(uid: str):
     """Return the current user's profile."""
     profile_data = get_profile_data(uid)
+    logger.info(
+        "Profile retrieved",
+        extra={"method": "GET", "path": "/profile", "uid": uid, "status": 200}
+    )
     return jsonify({"uid": uid, "profile": profile_data}), 200
 
 
@@ -39,10 +46,18 @@ def api_create_profile(uid: str):
 
     error = validate_profile_data(first_name, last_name, student_id)
     if error:
+        logger.warning(
+            "Profile validation failed",
+            extra={"method": "POST", "path": "/profile", "uid": uid, "status": 400}
+        )
         return jsonify({"error": error}), 400
 
     normalized = normalize_profile_data(first_name, last_name, student_id)
     set_profile(uid, normalized, merge=False)
+    logger.info(
+        "Profile created",
+        extra={"method": "POST", "path": "/profile", "uid": uid, "status": 200}
+    )
     return jsonify({"message": "Profile saved successfully", "profile": normalized}), 200
 
 
@@ -106,6 +121,10 @@ def api_update_profile(uid: str):
     set_profile(uid, update_data, merge=True)
 
     updated_profile = get_profile_data(uid)
+    logger.info(
+        "Profile updated",
+        extra={"method": "PUT", "path": "/profile", "uid": uid, "status": 200}
+    )
     return jsonify({"message": "Profile updated successfully", "profile": updated_profile}), 200
 
 
@@ -114,6 +133,10 @@ def api_update_profile(uid: str):
 def api_delete_profile(uid: str):
     """Delete the current user's profile."""
     get_profile_doc_ref(uid).delete()
+    logger.info(
+        "Profile deleted",
+        extra={"method": "DELETE", "path": "/profile", "uid": uid, "status": 200}
+    )
     return jsonify({"message": "Profile deleted successfully"}), 200
 
 
