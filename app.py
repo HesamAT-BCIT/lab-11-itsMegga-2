@@ -6,6 +6,7 @@ from blueprints.dashboard import dashboard_bp
 from blueprints.profile import profile_bp
 from config import Config
 import firebase  # noqa: F401
+import utils.logger
 
 app = Flask(__name__)
 app.config.from_object(Config)
