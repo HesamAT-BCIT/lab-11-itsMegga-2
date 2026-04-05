@@ -8,6 +8,9 @@ from utils.validation import normalize_profile_data, validate_profile_data
 
 from . import profile_bp
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 @profile_bp.route("/profile", methods=["GET", "POST"])
 def profile():
@@ -18,6 +21,10 @@ def profile():
 
     if request.method == "GET":
         profile_data = get_profile_data(current_user)
+        logger.info(
+            "Profile retrieved",
+            extra={"method": "GET", "path": "/profile", "uid": current_user}
+        )
         return render_template("profile.html", profile=profile_data, error=None)
 
     first_name = request.form.get("first_name", "")
@@ -31,8 +38,16 @@ def profile():
             "last_name": last_name,
             "student_id": student_id,
         }
+        logger.warning(
+            "Profile validation failed",
+            extra={"method": "POST", "path": "/profile", "uid": current_user}
+        )
         return render_template("profile.html", profile=profile_data, error=error)
 
     normalized = normalize_profile_data(first_name, last_name, student_id)
     set_profile(current_user, normalized, merge=True)
+    logger.info(
+        "Profile created",
+        extra={"method": "POST", "path": "/profile", "uid": current_user}
+    )
     return redirect(url_for("dashboard.home"))
